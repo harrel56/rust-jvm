@@ -1,6 +1,7 @@
+#[derive(Debug)]
 enum ConstantInfo {
     Utf8 {
-        bytes: [u8]
+        bytes: Vec<u8>
     },
     Integer {
         bytes: u32
@@ -47,26 +48,46 @@ enum ConstantInfo {
     },
     InvokeDynamic {
         bootstrap_method_attr_index: u16,
-        
+        name_and_type_index: u16
     },
 }
 
-fn x() {
-    let x : ConstantInfo;
-    match x {
-        ConstantInfo::Utf8 => {}
-        ConstantInfo::Integer(_) => {}
-        ConstantInfo::Float(_) => {}
-        ConstantInfo::Long(_) => {}
-        ConstantInfo::Double(_) => {}
-        ConstantInfo::Class(_) => {}
-        ConstantInfo::String(_) => {}
-        ConstantInfo::Fieldref(_) => {}
-        ConstantInfo::Methodref(_) => {}
-        ConstantInfo::InterfaceMethodref(_) => {}
-        ConstantInfo::NameAndType(_) => {}
-        ConstantInfo::MethodHandle(_) => {}
-        ConstantInfo::MethodType(_) => {}
-        ConstantInfo::InvokeDynamic(_) => {}
+impl ConstantInfo {
+    pub fn tag(&self) -> u8 {
+        match self {
+            ConstantInfo::Utf8 => 1,
+            ConstantInfo::Integer => 3,
+            ConstantInfo::Float => 4,
+            ConstantInfo::Long => 5,
+            ConstantInfo::Double => 6,
+            ConstantInfo::Class => 7,
+            ConstantInfo::String => 8,
+            ConstantInfo::Fieldref => 9,
+            ConstantInfo::Methodref => 10,
+            ConstantInfo::InterfaceMethodref => 11,
+            ConstantInfo::NameAndType => 12,
+            ConstantInfo::MethodHandle => 15,
+            ConstantInfo::MethodType => 16,
+            ConstantInfo::InvokeDynamic => 18
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        match self {
+            ConstantInfo::Utf8 => "CONSTANT_Utf8",
+            ConstantInfo::Integer => "CONSTANT_Integer",
+            ConstantInfo::Float => "CONSTANT_Float",
+            ConstantInfo::Long => "CONSTANT_Long",
+            ConstantInfo::Double => "CONSTANT_Double",
+            ConstantInfo::Class => "CONSTANT_Class",
+            ConstantInfo::String => "CONSTANT_String",
+            ConstantInfo::Fieldref => "CONSTANT_Fieldref",
+            ConstantInfo::Methodref => "CONSTANT_Methodref",
+            ConstantInfo::InterfaceMethodref => "CONSTANT_InterfaceMethodref",
+            ConstantInfo::NameAndType => "CONSTANT_NameAndType",
+            ConstantInfo::MethodHandle => "CONSTANT_MethodHandle",
+            ConstantInfo::MethodType => "CONSTANT_MethodType",
+            ConstantInfo::InvokeDynamic => "CONSTANT_InvokeDynamic"
+        }
     }
 }
