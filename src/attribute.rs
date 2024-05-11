@@ -1,10 +1,13 @@
-pub enum Attribute {
+pub struct Attribute {
+    attribute_name_index: u16,
+    value: AttributeValue
+}
+
+pub enum AttributeValue {
     ConstantValue {
-        attribute_name_index: u16,
         constantvalue_index: u16
     },
     Code {
-        attribute_name_index: u16,
         max_stack: u16,
         max_locals: u16,
         code: Vec<u8>,
@@ -12,9 +15,11 @@ pub enum Attribute {
         attributes: Vec<Attribute>
     },
     Exceptions {
-        attribute_name_index: u16,
+        exception_index_table: [u16],
     },
-    SourceFile,
+    SourceFile {
+
+    },
     LineNumberTable,
     LocalVariableTable,
     InnerClasses,
