@@ -1,22 +1,12 @@
+use crate::parser::ByteParser;
+
 #[derive(Debug)]
-enum ConstantInfo {
-    Utf8 {
-        bytes: Vec<u8>
-    },
-    Integer {
-        bytes: u32
-    },
-    Float {
-        bytes: u32
-    },
-    Long {
-        high_bytes: u32,
-        low_bytes: u32
-    },
-    Double {
-        high_bytes: u32,
-        low_bytes: u32
-    },
+pub enum ConstantInfo {
+    Utf8(String),
+    Integer(u32),
+    Float(u32),
+    Long(u64),
+    Double(u64),
     Class {
         name_index: u16
     },
@@ -46,48 +36,100 @@ enum ConstantInfo {
     MethodType {
         descriptor_index: u16
     },
+    Dynamic {
+        bootstrap_method_attr_index: u16,
+        name_and_type_index: u16
+    },
     InvokeDynamic {
         bootstrap_method_attr_index: u16,
         name_and_type_index: u16
     },
+    Module {
+        name_index: u16
+    },
+    Package {
+        name_index: u16
+    }
 }
 
-impl ConstantInfo {
-    pub fn tag(&self) -> u8 {
-        match self {
-            ConstantInfo::Utf8 => 1,
-            ConstantInfo::Integer => 3,
-            ConstantInfo::Float => 4,
-            ConstantInfo::Long => 5,
-            ConstantInfo::Double => 6,
-            ConstantInfo::Class => 7,
-            ConstantInfo::String => 8,
-            ConstantInfo::Fieldref => 9,
-            ConstantInfo::Methodref => 10,
-            ConstantInfo::InterfaceMethodref => 11,
-            ConstantInfo::NameAndType => 12,
-            ConstantInfo::MethodHandle => 15,
-            ConstantInfo::MethodType => 16,
-            ConstantInfo::InvokeDynamic => 18
+pub fn read_cp_info(parser: &mut ByteParser) -> ConstantInfo {
+    let tag = parser.read_u8();
+    match tag {
+        1 => {
+            let length = parser.read_u16();
+            let mut bytes = Vec::with_capacity(length as usize);
+            for _ in 0..length {
+                bytes.push(parser.read_u8());
+            }
+            ConstantInfo::Utf8(String::from_utf8(bytes).unwrap())
         }
-    }
-
-    pub fn name(&self) -> &str {
-        match self {
-            ConstantInfo::Utf8 => "CONSTANT_Utf8",
-            ConstantInfo::Integer => "CONSTANT_Integer",
-            ConstantInfo::Float => "CONSTANT_Float",
-            ConstantInfo::Long => "CONSTANT_Long",
-            ConstantInfo::Double => "CONSTANT_Double",
-            ConstantInfo::Class => "CONSTANT_Class",
-            ConstantInfo::String => "CONSTANT_String",
-            ConstantInfo::Fieldref => "CONSTANT_Fieldref",
-            ConstantInfo::Methodref => "CONSTANT_Methodref",
-            ConstantInfo::InterfaceMethodref => "CONSTANT_InterfaceMethodref",
-            ConstantInfo::NameAndType => "CONSTANT_NameAndType",
-            ConstantInfo::MethodHandle => "CONSTANT_MethodHandle",
-            ConstantInfo::MethodType => "CONSTANT_MethodType",
-            ConstantInfo::InvokeDynamic => "CONSTANT_InvokeDynamic"
+        3 => {
+            ConstantInfo::Integer(parser.read_u32())
         }
+        4 => {
+            ConstantInfo::Float(parser.read_u32())
+        }
+        5 => {
+            ConstantInfo::Long(parser.read_u64())
+        }
+        6 => {
+            ConstantInfo::Double(parser.read_u64())
+        }
+        7 => {
+            let name_index = parser.read_u16();
+            ConstantInfo::Class { name_index }
+        }
+        8 => {
+            let string_index = parser.read_u16();
+            ConstantInfo::String { string_index }
+        }
+        9 => {
+            let class_index = parser.read_u16();
+            let name_and_type_index = parser.read_u16();
+            ConstantInfo::Fieldref { class_index, name_and_type_index }
+        }
+        10 => {
+            let class_index = parser.read_u16();
+            let name_and_type_index = parser.read_u16();
+            ConstantInfo::Methodref { class_index, name_and_type_index }
+        }
+        11 => {
+            let class_index = parser.read_u16();
+            let name_and_type_index = parser.read_u16();
+            ConstantInfo::InterfaceMethodref { class_index, name_and_type_index }
+        }
+        12 => {
+            let name_index = parser.read_u16();
+            let descriptor_index = parser.read_u16();
+            ConstantInfo::NameAndType { name_index, descriptor_index }
+        }
+        15 => {
+            let reference_kind = parser.read_u8();
+            let reference_index = parser.read_u16();
+            ConstantInfo::MethodHandle { reference_kind, reference_index }
+        }
+        16 => {
+            let descriptor_index = parser.read_u16();
+            ConstantInfo::MethodType { descriptor_index }
+        },
+        17 => {
+            let bootstrap_method_attr_index = parser.read_u16();
+            let name_and_type_index = parser.read_u16();
+            ConstantInfo::Dynamic { bootstrap_method_attr_index, name_and_type_index }
+        }
+        18 => {
+            let bootstrap_method_attr_index = parser.read_u16();
+            let name_and_type_index = parser.read_u16();
+            ConstantInfo::InvokeDynamic { bootstrap_method_attr_index, name_and_type_index }
+        },
+        19 => {
+            let name_index = parser.read_u16();
+            ConstantInfo::Module { name_index }
+        },
+        20 => {
+            let name_index = parser.read_u16();
+            ConstantInfo::Package { name_index }
+        }
+        _ => panic!("Invalid cp_info.tag [{}]", tag)
     }
 }
