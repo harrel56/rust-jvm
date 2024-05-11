@@ -3,10 +3,10 @@ use crate::parser::ByteParser;
 #[derive(Debug)]
 pub enum ConstantInfo {
     Utf8(String),
-    Integer(u32),
-    Float(u32),
-    Long(u64),
-    Double(u64),
+    Integer(i32),
+    Float(f32),
+    Long(i64),
+    Double(f64),
     Class {
         name_index: u16
     },
@@ -64,16 +64,16 @@ pub fn read_cp_info(parser: &mut ByteParser) -> ConstantInfo {
             ConstantInfo::Utf8(String::from_utf8(bytes).unwrap())
         }
         3 => {
-            ConstantInfo::Integer(parser.read_u32())
+            ConstantInfo::Integer(parser.read_u32() as i32)
         }
         4 => {
-            ConstantInfo::Float(parser.read_u32())
+            ConstantInfo::Float(parser.read_u32() as f32)
         }
         5 => {
-            ConstantInfo::Long(parser.read_u64())
+            ConstantInfo::Long(parser.read_u64() as i64)
         }
         6 => {
-            ConstantInfo::Double(parser.read_u64())
+            ConstantInfo::Double(parser.read_u64() as f64)
         }
         7 => {
             let name_index = parser.read_u16();
