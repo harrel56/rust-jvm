@@ -15,7 +15,7 @@ pub enum AttributeValue {
         attributes: Vec<Attribute>
     },
     Exceptions {
-        exception_index_table: [u16],
+        exception_index_table: Vec<u16>,
     },
     SourceFile {
 

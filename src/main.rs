@@ -11,7 +11,11 @@ use crate::parser::ByteParser;
 struct ClassHeader {
     minor_version: u16,
     major_version: u16,
-    constant_pool: Vec<ConstantInfo>
+    constant_pool: Vec<ConstantInfo>,
+    access_flags: u16,
+    this_class: u16,
+    super_class: u16,
+    interfaces: Vec<u16>
 }
 
 fn main() -> Result<(), Error> {
@@ -33,10 +37,24 @@ fn main() -> Result<(), Error> {
         constant_pool.push(read_cp_info(&mut parser));
     }
 
+    let access_flags = parser.read_u16();
+    let this_class = parser.read_u16();
+    let super_class = parser.read_u16();
+
+    let interfaces_count = parser.read_u16();
+    let mut interfaces = Vec::with_capacity(interfaces_count as usize);
+    for _ in 0..interfaces_count {
+        interfaces.push(parser.read_u16());
+    }
+
     let class_header = ClassHeader {
         minor_version,
         major_version,
-        constant_pool
+        constant_pool,
+        access_flags,
+        this_class,
+        super_class,
+        interfaces
     };
     println!("class: {:?}", class_header);
     Ok(())
