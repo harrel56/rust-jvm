@@ -4,6 +4,7 @@ mod attribute;
 
 use std::{fs};
 use std::io::{Error, ErrorKind};
+use crate::attribute::{Attribute, read_attributes};
 use crate::constant_pool::{ConstantInfo, read_cp_info};
 use crate::parser::ByteParser;
 
@@ -15,7 +16,18 @@ struct ClassHeader {
     access_flags: u16,
     this_class: u16,
     super_class: u16,
-    interfaces: Vec<u16>
+    interfaces: Vec<u16>,
+    fields: Vec<MemberInfo>,
+    methods: Vec<MemberInfo>,
+    attributes: Vec<Attribute>
+}
+
+#[derive(Debug)]
+struct MemberInfo {
+    access_flags: u16,
+    name_index: u16,
+    descriptor_index: u16,
+    attributes: Vec<Attribute>
 }
 
 fn main() -> Result<(), Error> {
@@ -47,6 +59,10 @@ fn main() -> Result<(), Error> {
         interfaces.push(parser.read_u16());
     }
 
+    let fields = read_member_infos(&mut parser);
+    let methods = read_member_infos(&mut parser);
+    let attributes = read_attributes(&mut parser);
+
     let class_header = ClassHeader {
         minor_version,
         major_version,
@@ -54,10 +70,31 @@ fn main() -> Result<(), Error> {
         access_flags,
         this_class,
         super_class,
-        interfaces
+        interfaces,
+        fields,
+        methods,
+        attributes
     };
     println!("class: {:?}", class_header);
     Ok(())
+}
+
+fn read_member_infos(parser: &mut ByteParser) -> Vec<MemberInfo> {
+    let members_count = parser.read_u16();
+    let mut members = Vec::with_capacity(members_count as usize);
+    for _ in 0..members_count {
+        let access_flags = parser.read_u16();
+        let name_index = parser.read_u16();
+        let descriptor_index = parser.read_u16();
+        let attributes = read_attributes(parser);
+        members.push(MemberInfo {
+            access_flags,
+            name_index,
+            descriptor_index,
+            attributes,
+        });
+    }
+    members
 }
 
 

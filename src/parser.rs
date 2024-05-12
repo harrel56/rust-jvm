@@ -12,6 +12,10 @@ impl ByteParser<'_> {
         ByteParser { pos: 0, bytes }
     }
 
+    pub fn skip(&mut self, count: usize) {
+        self.pos += count;
+    }
+
     pub fn read_u8(&mut self) -> u8 {
         self.pos += U8_SIZE;
         self.bytes[self.pos - U8_SIZE]
