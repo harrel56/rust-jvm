@@ -133,3 +133,16 @@ pub fn read_cp_info(parser: &mut ByteParser) -> ConstantInfo {
         _ => panic!("Invalid cp_info.tag [{}]", tag)
     }
 }
+
+pub trait ConstantPool {
+    fn as_string(&self, index: u16) -> String;
+}
+
+impl ConstantPool for Vec<ConstantInfo> {
+    fn as_string(&self, index: u16) -> String {
+        match &self[index as usize - 1] {
+            ConstantInfo::Utf8(data) => data.clone(),
+            _ => panic!()
+        }
+    }
+}

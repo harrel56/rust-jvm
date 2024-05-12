@@ -5,7 +5,7 @@ mod attribute;
 use std::{fs};
 use std::io::{Error, ErrorKind};
 use crate::attribute::{Attribute, read_attributes};
-use crate::constant_pool::{ConstantInfo, read_cp_info};
+use crate::constant_pool::{ConstantInfo, ConstantPool, read_cp_info};
 use crate::parser::ByteParser;
 
 #[derive(Debug)]
@@ -25,8 +25,8 @@ struct ClassHeader {
 #[derive(Debug)]
 struct MemberInfo {
     access_flags: u16,
-    name_index: u16,
-    descriptor_index: u16,
+    name: String,
+    descriptor: String,
     attributes: Vec<Attribute>
 }
 
@@ -59,8 +59,8 @@ fn main() -> Result<(), Error> {
         interfaces.push(parser.read_u16());
     }
 
-    let fields = read_member_infos(&mut parser);
-    let methods = read_member_infos(&mut parser);
+    let fields = read_member_infos(&mut parser, &constant_pool);
+    let methods = read_member_infos(&mut parser, &constant_pool);
     let attributes = read_attributes(&mut parser);
 
     let class_header = ClassHeader {
@@ -79,7 +79,7 @@ fn main() -> Result<(), Error> {
     Ok(())
 }
 
-fn read_member_infos(parser: &mut ByteParser) -> Vec<MemberInfo> {
+fn read_member_infos(parser: &mut ByteParser, cp: &Vec<ConstantInfo>) -> Vec<MemberInfo> {
     let members_count = parser.read_u16();
     let mut members = Vec::with_capacity(members_count as usize);
     for _ in 0..members_count {
@@ -87,14 +87,24 @@ fn read_member_infos(parser: &mut ByteParser) -> Vec<MemberInfo> {
         let name_index = parser.read_u16();
         let descriptor_index = parser.read_u16();
         let attributes = read_attributes(parser);
+
+        let name = cp.as_string(name_index);
+        let descriptor = cp.as_string(descriptor_index);
         members.push(MemberInfo {
             access_flags,
-            name_index,
-            descriptor_index,
+            name,
+            descriptor,
             attributes,
         });
     }
     members
+}
+
+fn cp_as_string(info: &ConstantInfo) -> String {
+    match info {
+        ConstantInfo::Utf8(data) => data.clone(),
+        _ => panic!()
+    }
 }
 
 
